@@ -112,7 +112,9 @@ class ActivityStatement(models.AbstractModel):
             )
         )
         for row in self.env.cr.dictfetchall():
-            balance_start[row.pop("partner_id")].append(row)
+            balance_start[row['partner_id']].append(
+                {'currency_id': row['currency_id'], 'balance': row['balance']})            
+
         return balance_start
 
     def _display_activity_lines_sql_q1(
