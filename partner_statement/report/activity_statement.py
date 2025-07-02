@@ -16,6 +16,9 @@ class ActivityStatement(models.AbstractModel):
     _description = "Partner Activity Statement"
 
     def _initial_balance_sql_q1(self, partners, date_start, account_type):
+        excluded_accounts_ids = tuple(
+            self.env.context.get("excluded_accounts_ids", [])
+        ) or (-1,)
         return str(
             self._cr.mogrify(
                 """
@@ -46,6 +49,7 @@ class ActivityStatement(models.AbstractModel):
             ) as pc ON pc.credit_move_id = l.id
             WHERE l.partner_id IN %(partners)s
                 AND at.type = %(account_type)s
+                AND aa.id not in %(excluded_accounts_ids)s
                 AND l.date < %(date_start)s AND not l.blocked
                 AND m.state IN ('posted')
                 AND (
@@ -179,6 +183,7 @@ class ActivityStatement(models.AbstractModel):
                    END, case_ref, l.blocked, l.currency_id, l.company_id
            """
         return str(self._cr.mogrify(query, locals()), "utf-8")
+
 
     def _display_activity_lines_sql_q2(self, sub, company_id):
         return str(
